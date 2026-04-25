@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lythwood Residence — Virtual Tour",
+  title: "Lythwood Residence",
   description:
-    "Interactive 3D virtual tour of a residential property. Drag to look around, click hotspots to walk through rooms.",
+    "Modern 4-room residential property in Cape Town with an interactive 3D virtual tour.",
 };
 
 export default function RootLayout({
