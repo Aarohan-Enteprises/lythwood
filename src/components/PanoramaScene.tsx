@@ -8,9 +8,10 @@ import type { Room } from "@/lib/property";
 type Props = {
   room: Room;
   onSelectRoom: (id: string) => void;
+  vrMode?: boolean;
 };
 
-export function PanoramaScene({ room, onSelectRoom }: Props) {
+export function PanoramaScene({ room, onSelectRoom, vrMode = false }: Props) {
   const texture = useLoader(THREE.TextureLoader, room.panorama);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.minFilter = THREE.LinearFilter;
@@ -31,6 +32,7 @@ export function PanoramaScene({ room, onSelectRoom }: Props) {
           arrowRotation={h.arrowRotation ?? 0}
           label={h.label}
           onClick={() => onSelectRoom(h.to)}
+          vrMode={vrMode}
         />
       ))}
     </>
