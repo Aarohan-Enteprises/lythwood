@@ -5,7 +5,7 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { PanoramaScene } from "./PanoramaScene";
-import { sampleProperty } from "@/lib/property";
+import type { Property } from "@/lib/property";
 import { StereoRenderer } from "./vr/StereoRenderer";
 import { DeviceOrientationCamera } from "./vr/DeviceOrientationCamera";
 import { GazeController } from "./vr/GazeController";
@@ -102,9 +102,7 @@ async function requestGyroPermission(): Promise<boolean> {
   return true;
 }
 
-export function PanoramaViewer() {
-  const property = sampleProperty;
-
+export function PanoramaViewer({ property }: { property: Property }) {
   const [roomId, setRoomId] = useState<string>(property.startRoomId);
   const [transitioning, setTransitioning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

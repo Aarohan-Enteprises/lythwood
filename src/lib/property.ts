@@ -24,7 +24,7 @@ export type Property = {
   startRoomId: string;
 };
 
-export const sampleProperty: Property = {
+const lythwoodResidence: Property = {
   id: "lythwood-residence",
   name: "Lythwood Residence",
   address: "12 Birchwood Lane, Cape Town",
@@ -150,3 +150,121 @@ export const sampleProperty: Property = {
     },
   ],
 };
+
+const propertyTwo: Property = {
+  id: "property-two",
+  name: "Property Two",
+  address: "Sample Address",
+  description:
+    "A 5-room property tour. Adjust hotspot positions in src/lib/property.ts as needed.",
+  startRoomId: "room-1",
+  rooms: [
+    {
+      id: "room-1",
+      name: "Room 1",
+      panorama: "/panoramas/property2_room1.jpg",
+      hotspots: [
+        {
+          to: "room-2",
+          label: "To Room 2",
+          yaw: 0,
+          pitch: -0.4,
+          distance: 5,
+          arrowRotation: Math.PI,
+        },
+      ],
+    },
+    {
+      id: "room-2",
+      name: "Room 2",
+      panorama: "/panoramas/property2_room2.avif",
+      hotspots: [
+        {
+          to: "room-1",
+          label: "To Room 1",
+          yaw: Math.PI,
+          pitch: -0.4,
+          distance: 5,
+          arrowRotation: Math.PI,
+        },
+        {
+          to: "room-3",
+          label: "To Room 3",
+          yaw: 0,
+          pitch: -0.4,
+          distance: 5,
+          arrowRotation: Math.PI,
+        },
+      ],
+    },
+    {
+      id: "room-3",
+      name: "Room 3",
+      panorama: "/panoramas/property2_room3.jpg",
+      hotspots: [
+        {
+          to: "room-2",
+          label: "To Room 2",
+          yaw: Math.PI,
+          pitch: -0.4,
+          distance: 5,
+          arrowRotation: Math.PI,
+        },
+        {
+          to: "room-4",
+          label: "To Room 4",
+          yaw: 0,
+          pitch: -0.4,
+          distance: 5,
+          arrowRotation: Math.PI,
+        },
+      ],
+    },
+    {
+      id: "room-4",
+      name: "Room 4",
+      panorama: "/panoramas/property2_room4.jpg",
+      hotspots: [
+        {
+          to: "room-3",
+          label: "To Room 3",
+          yaw: Math.PI,
+          pitch: -0.4,
+          distance: 5,
+          arrowRotation: Math.PI,
+        },
+        {
+          to: "room-5",
+          label: "To Room 5",
+          yaw: 0,
+          pitch: -0.4,
+          distance: 5,
+          arrowRotation: Math.PI,
+        },
+      ],
+    },
+    {
+      id: "room-5",
+      name: "Room 5",
+      panorama: "/panoramas/property2_room5.jpg",
+      hotspots: [
+        {
+          to: "room-4",
+          label: "To Room 4",
+          yaw: Math.PI,
+          pitch: -0.4,
+          distance: 5,
+          arrowRotation: Math.PI,
+        },
+      ],
+    },
+  ],
+};
+
+export const properties: Property[] = [lythwoodResidence, propertyTwo];
+
+export function getProperty(id: string): Property | undefined {
+  return properties.find((p) => p.id === id);
+}
+
+export const sampleProperty = lythwoodResidence;
