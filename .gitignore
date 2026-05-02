@@ -42,6 +42,9 @@ yarn-error.log*
 # generated thumbnails (rebuild via scripts/gen-thumbs.mjs)
 /thumbs-out/
 
+# recompressed panoramas (rebuild via scripts/recompress-property2.mjs)
+/recompressed-out/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
