@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import { Hotspot } from "./Hotspot";
@@ -16,6 +17,15 @@ export function PanoramaScene({ room, onSelectRoom, vrMode = false }: Props) {
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
+
+  // Release the ~134 MB GPU texture when this room is replaced. Without this
+  // the renderer accumulates one full equirectangular per visited room and
+  // Chrome eventually kills the tab.
+  useEffect(() => {
+    return () => {
+      texture.dispose();
+    };
+  }, [texture]);
 
   return (
     <>

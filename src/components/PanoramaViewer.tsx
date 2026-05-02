@@ -13,17 +13,10 @@ import { StereoRenderer } from "./vr/StereoRenderer";
 import { DeviceOrientationCamera } from "./vr/DeviceOrientationCamera";
 import { GazeController } from "./vr/GazeController";
 
-// Reuse parsed textures across room switches so going back is instant.
-THREE.Cache.enabled = true;
-
-const prefetched = new Set<string>();
-function prefetchPanorama(url: string) {
-  if (prefetched.has(url)) return;
-  prefetched.add(url);
-  const img = new Image();
-  img.decoding = "async";
-  img.src = url;
-}
+// Don't cache parsed image data: an 8K equirectangular costs ~134 MB as an
+// RGBA texture, and the previous behaviour pinned every visited panorama in
+// memory until the tab was killed. Trade a small reload cost for stability.
+THREE.Cache.enabled = false;
 
 type AimRef = { dx: number; dy: number; dz: number };
 
@@ -177,36 +170,6 @@ export function PanoramaViewer({ property: initialProperty }: { property: Proper
   const room = useMemo(() => {
     return property.rooms.find((r) => r.id === roomId) ?? property.rooms[0];
   }, [property, roomId]);
-
-  // Once the current room is settled, warm the browser cache for any room
-  // reachable in one hop so that hotspot navigation feels instant.
-  useEffect(() => {
-    if (transitioning) return;
-    const idle =
-      typeof window !== "undefined" &&
-      "requestIdleCallback" in window
-        ? (window as unknown as {
-            requestIdleCallback: (cb: () => void) => number;
-          }).requestIdleCallback
-        : (cb: () => void) => window.setTimeout(cb, 200);
-    const handle = idle(() => {
-      for (const h of room.hotspots) {
-        const target = property.rooms.find((r) => r.id === h.to);
-        if (target) prefetchPanorama(target.panorama);
-      }
-    });
-    return () => {
-      if (
-        typeof window !== "undefined" &&
-        "cancelIdleCallback" in window &&
-        typeof handle === "number"
-      ) {
-        (window as unknown as {
-          cancelIdleCallback: (h: number) => void;
-        }).cancelIdleCallback(handle);
-      }
-    };
-  }, [room, property.rooms, transitioning]);
 
   const selectRoom = useCallback((id: string) => {
     setRoomId((current) => {
