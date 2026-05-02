@@ -143,8 +143,25 @@ export function PanoramaViewer({ property: initialProperty }: { property: Proper
   const [vrMode, setVrMode] = useState(false);
   const [showMobileHint, setShowMobileHint] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [editorAvailable, setEditorAvailable] = useState(false);
   const aimRef = useRef<AimRef>({ dx: 0, dy: 0, dz: 1 });
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+  // Hidden access to the editor: Ctrl/Cmd + Shift + E reveals (or hides) the
+  // edit button. Stays revealed until toggled off or the page is reloaded.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey) || !e.shiftKey) return;
+      if (e.key !== "E" && e.key !== "e") return;
+      e.preventDefault();
+      setEditorAvailable((v) => {
+        if (v) setEditMode(false);
+        return !v;
+      });
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     if (!showMobileHint) return;
@@ -414,19 +431,21 @@ export function PanoramaViewer({ property: initialProperty }: { property: Proper
           </div>
 
           <div className="pointer-events-auto absolute right-3 bottom-32 z-20 flex flex-col gap-2 md:right-6 md:bottom-36">
-            <button
-              type="button"
-              onClick={() => setEditMode((v) => !v)}
-              aria-label={editMode ? "Close editor" : "Open editor"}
-              title={editMode ? "Close editor" : "Edit tour"}
-              className={`grid h-12 w-12 place-items-center rounded-full shadow-lg ring-1 transition ${
-                editMode
-                  ? "bg-lime-400 text-black ring-black/10 hover:bg-lime-300"
-                  : "bg-white/15 text-white ring-white/10 backdrop-blur-md hover:bg-white/25"
-              }`}
-            >
-              <EditIcon className="h-5 w-5" />
-            </button>
+            {editorAvailable && (
+              <button
+                type="button"
+                onClick={() => setEditMode((v) => !v)}
+                aria-label={editMode ? "Close editor" : "Open editor"}
+                title={editMode ? "Close editor" : "Edit tour"}
+                className={`grid h-12 w-12 place-items-center rounded-full shadow-lg ring-1 transition ${
+                  editMode
+                    ? "bg-lime-400 text-black ring-black/10 hover:bg-lime-300"
+                    : "bg-white/15 text-white ring-white/10 backdrop-blur-md hover:bg-white/25"
+                }`}
+              >
+                <EditIcon className="h-5 w-5" />
+              </button>
+            )}
             <button
               type="button"
               onClick={enterVR}
