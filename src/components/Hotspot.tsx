@@ -11,24 +11,8 @@ type Props = {
   onClick: () => void;
   distance?: number;
   floorY?: number;
-  arrowRotation?: number;
   vrMode?: boolean;
 };
-
-const chevronShape = (() => {
-  const s = new THREE.Shape();
-  const w = 0.55;
-  const h = 0.45;
-  const t = 0.18;
-  s.moveTo(-w, -h * 0.4);
-  s.lineTo(0, h * 0.6);
-  s.lineTo(w, -h * 0.4);
-  s.lineTo(w - t, -h * 0.4);
-  s.lineTo(0, h * 0.6 - t * 1.2);
-  s.lineTo(-(w - t), -h * 0.4);
-  s.closePath();
-  return s;
-})();
 
 export function Hotspot({
   yaw,
@@ -36,13 +20,11 @@ export function Hotspot({
   onClick,
   distance = 4,
   floorY = -2.5,
-  arrowRotation = 0,
   vrMode = false,
 }: Props) {
   const [hovered, setHovered] = useState(false);
   const groupRef = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
-  const chevronRef = useRef<THREE.Mesh>(null);
   const progressRef = useRef<THREE.Mesh>(null);
 
   // Pull hotspots a little closer in VR so the gaze target is comfortable
@@ -74,11 +56,6 @@ export function Hotspot({
       ringRef.current.scale.setScalar(active ? 1.25 : pulse);
       const mat = ringRef.current.material as THREE.MeshBasicMaterial;
       mat.opacity = active ? 0.95 : 0.65 + Math.sin(t * 2.2) * 0.1;
-    }
-    if (chevronRef.current) {
-      chevronRef.current.position.z = 0.05 + Math.sin(t * 2.2) * 0.04;
-      const mat = chevronRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = active ? 1 : 0.85;
     }
     if (progressRef.current) {
       progressRef.current.visible = vrMode && gazeProgress > 0.01;
@@ -119,7 +96,6 @@ export function Hotspot({
         }
       }}
       position={position}
-      rotation={[0, yaw + arrowRotation, 0]}
       scale={scale}
     >
       <group
@@ -134,17 +110,6 @@ export function Hotspot({
             color="#ffffff"
             transparent
             opacity={0.7}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-            depthTest={false}
-          />
-        </mesh>
-        <mesh ref={chevronRef} position={[0, 0, 0.05]}>
-          <shapeGeometry args={[chevronShape]} />
-          <meshBasicMaterial
-            color="#ffffff"
-            transparent
-            opacity={0.85}
             side={THREE.DoubleSide}
             depthWrite={false}
             depthTest={false}

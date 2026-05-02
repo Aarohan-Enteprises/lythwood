@@ -2,60 +2,60 @@ import Link from "next/link";
 import { properties, type Property } from "@/lib/property";
 
 export default function Home() {
-  const featured = properties[0];
   const heroImage =
-    featured.rooms.find((r) => r.id === featured.startRoomId)?.panorama ??
-    featured.rooms[0].panorama;
+    properties[0].rooms.find((r) => r.id === properties[0].startRoomId)
+      ?.panorama ?? properties[0].rooms[0].panorama;
 
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
       <section className="relative h-[80vh] min-h-[520px] w-full overflow-hidden">
         <img
           src={heroImage}
-          alt={featured.name}
+          alt="Virtual tour preview"
+          fetchPriority="high"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-neutral-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/40 to-neutral-950" />
 
         <header className="relative z-10 flex items-center justify-between px-6 py-5 md:px-10">
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-lime-400" />
             <span className="text-sm font-semibold tracking-wide">
-              Lythwood
+              Property Tours
             </span>
           </div>
           <span className="rounded-full border border-white/20 px-3 py-1 text-[10px] uppercase tracking-widest text-white/70">
-            Demo
+            Demo Project
           </span>
         </header>
 
         <div className="relative z-10 mx-auto flex h-[calc(80vh-72px)] min-h-[440px] max-w-5xl flex-col items-start justify-end px-6 pb-12 md:px-10 md:pb-16">
           <p className="text-xs uppercase tracking-[0.3em] text-lime-400">
-            Featured Listing
+            Demo Project
           </p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-6xl">
-            {featured.name}
+            Property Virtual Tour
           </h1>
-          <p className="mt-2 text-sm text-white/70 md:text-base">
-            {featured.address}
-          </p>
           <p className="mt-6 max-w-2xl text-base text-white/80 md:text-lg">
-            {featured.description}
+            An interactive 3D walkthrough demo featuring {properties.length}{" "}
+            properties. Drag to look around, tap rings to move between rooms,
+            and try VR mode on a phone.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
-              href={`/tour/${featured.id}`}
-              className="rounded-full bg-lime-400 px-6 py-3 text-sm font-semibold text-black transition hover:bg-lime-300"
-            >
-              Take the Virtual Tour →
-            </Link>
             <a
               href="#listings"
+              className="rounded-full bg-lime-400 px-6 py-3 text-sm font-semibold text-black transition hover:bg-lime-300"
+            >
+              Browse Properties →
+            </a>
+            <Link
+              href={`/tour/${properties[0].id}`}
               className="rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/10"
             >
-              All Properties
-            </a>
+              Quick Start: {properties[0].name}
+            </Link>
           </div>
         </div>
       </section>
@@ -72,7 +72,7 @@ export default function Home() {
             </p>
           </div>
           <span className="text-[10px] uppercase tracking-widest text-white/50">
-            {properties.length} listings
+            {properties.length} properties
           </span>
         </div>
 
@@ -84,7 +84,7 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-white/10 px-6 py-8 text-center text-xs text-white/50 md:px-10">
-        Lythwood · Virtual property tours
+        Property Virtual Tour · Demo project
       </footer>
     </main>
   );
@@ -103,6 +103,8 @@ function PropertyCard({ property }: { property: Property }) {
         <img
           src={cover}
           alt={property.name}
+          loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent" />

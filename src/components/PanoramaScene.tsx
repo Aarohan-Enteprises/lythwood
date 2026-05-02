@@ -29,7 +29,6 @@ export function PanoramaScene({ room, onSelectRoom, vrMode = false }: Props) {
           key={`${room.id}-${i}-${h.to}`}
           yaw={h.yaw}
           distance={h.distance ?? 4}
-          arrowRotation={h.arrowRotation ?? 0}
           label={h.label}
           onClick={() => onSelectRoom(h.to)}
           vrMode={vrMode}

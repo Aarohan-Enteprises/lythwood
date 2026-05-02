@@ -1,14 +1,43 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { PanoramaScene } from "./PanoramaScene";
+import { EditorPanel } from "./EditorPanel";
 import type { Property } from "@/lib/property";
+import { usePropertyStore } from "@/lib/store";
+import { projectToFloor } from "@/lib/spherical";
 import { StereoRenderer } from "./vr/StereoRenderer";
 import { DeviceOrientationCamera } from "./vr/DeviceOrientationCamera";
 import { GazeController } from "./vr/GazeController";
+
+// Reuse parsed textures across room switches so going back is instant.
+THREE.Cache.enabled = true;
+
+const prefetched = new Set<string>();
+function prefetchPanorama(url: string) {
+  if (prefetched.has(url)) return;
+  prefetched.add(url);
+  const img = new Image();
+  img.decoding = "async";
+  img.src = url;
+}
+
+type AimRef = { dx: number; dy: number; dz: number };
+
+function AimTracker({ aimRef }: { aimRef: React.MutableRefObject<AimRef> }) {
+  const { camera } = useThree();
+  const v = useRef(new THREE.Vector3());
+  useFrame(() => {
+    camera.getWorldDirection(v.current);
+    aimRef.current.dx = v.current.x;
+    aimRef.current.dy = v.current.y;
+    aimRef.current.dz = v.current.z;
+  });
+  return null;
+}
 
 function FovZoom({ min, max, enabled }: { min: number; max: number; enabled: boolean }) {
   const { camera, gl } = useThree();
@@ -102,13 +131,19 @@ async function requestGyroPermission(): Promise<boolean> {
   return true;
 }
 
-export function PanoramaViewer({ property }: { property: Property }) {
-  const [roomId, setRoomId] = useState<string>(property.startRoomId);
+export function PanoramaViewer({ property: initialProperty }: { property: Property }) {
+  const store = usePropertyStore(initialProperty);
+  const { property, addHotspot } = store;
+
+  const [roomId, setRoomId] = useState<string>(initialProperty.startRoomId);
   const [transitioning, setTransitioning] = useState(false);
+  const [panoReady, setPanoReady] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [vrMode, setVrMode] = useState(false);
   const [showMobileHint, setShowMobileHint] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const aimRef = useRef<AimRef>({ dx: 0, dy: 0, dz: 1 });
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
 
   useEffect(() => {
@@ -126,16 +161,64 @@ export function PanoramaViewer({ property }: { property: Property }) {
     return property.rooms.find((r) => r.id === roomId) ?? property.rooms[0];
   }, [property, roomId]);
 
+  // Once the current room is settled, warm the browser cache for any room
+  // reachable in one hop so that hotspot navigation feels instant.
+  useEffect(() => {
+    if (transitioning) return;
+    const idle =
+      typeof window !== "undefined" &&
+      "requestIdleCallback" in window
+        ? (window as unknown as {
+            requestIdleCallback: (cb: () => void) => number;
+          }).requestIdleCallback
+        : (cb: () => void) => window.setTimeout(cb, 200);
+    const handle = idle(() => {
+      for (const h of room.hotspots) {
+        const target = property.rooms.find((r) => r.id === h.to);
+        if (target) prefetchPanorama(target.panorama);
+      }
+    });
+    return () => {
+      if (
+        typeof window !== "undefined" &&
+        "cancelIdleCallback" in window &&
+        typeof handle === "number"
+      ) {
+        (window as unknown as {
+          cancelIdleCallback: (h: number) => void;
+        }).cancelIdleCallback(handle);
+      }
+    };
+  }, [room, property.rooms, transitioning]);
+
   const selectRoom = useCallback((id: string) => {
     setRoomId((current) => {
       if (id === current) return current;
       setTransitioning(true);
+      setPanoReady(false);
       window.setTimeout(() => {
         window.setTimeout(() => setTransitioning(false), 300);
       }, 250);
       return id;
     });
   }, []);
+
+  const dropAtCrosshair = useCallback(() => {
+    const { dx, dy, dz } = aimRef.current;
+    const { yaw, pitch, distance } = projectToFloor(dx, dy, dz);
+    const otherRoom = property.rooms.find((r) => r.id !== room.id);
+    if (!otherRoom) {
+      alert("Add another room first so the hotspot has somewhere to link to.");
+      return;
+    }
+    addHotspot(room.id, {
+      to: otherRoom.id,
+      label: `To ${otherRoom.name}`,
+      yaw,
+      pitch,
+      distance,
+    });
+  }, [property.rooms, room, addHotspot]);
 
   function toggleFullscreen() {
     const el = containerRef.current;
@@ -244,6 +327,7 @@ export function PanoramaViewer({ property }: { property: Property }) {
       >
         <Suspense fallback={null}>
           <PanoramaScene room={room} onSelectRoom={selectRoom} vrMode={vrMode} />
+          <SceneReadyMarker key={room.id} onReady={() => setPanoReady(true)} />
         </Suspense>
 
         {!vrMode && (
@@ -262,6 +346,7 @@ export function PanoramaViewer({ property }: { property: Property }) {
         <DeviceOrientationCamera enabled={vrMode} />
         <GazeController enabled={vrMode} />
         <StereoRenderer enabled={vrMode} />
+        <AimTracker aimRef={aimRef} />
       </Canvas>
 
       <div
@@ -269,6 +354,20 @@ export function PanoramaViewer({ property }: { property: Property }) {
           transitioning ? "opacity-100" : "opacity-0"
         }`}
       />
+
+      <div
+        className={`pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-black transition-opacity duration-300 ${
+          panoReady ? "opacity-0" : "opacity-100"
+        }`}
+        aria-hidden={panoReady}
+      >
+        <div className="flex flex-col items-center gap-3">
+          <span className="block h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-lime-400" />
+          <span className="text-[10px] uppercase tracking-widest text-white/60">
+            Loading {room.name}
+          </span>
+        </div>
+      </div>
 
       {!vrMode && (
         <>
@@ -317,6 +416,19 @@ export function PanoramaViewer({ property }: { property: Property }) {
           <div className="pointer-events-auto absolute right-3 bottom-32 z-20 flex flex-col gap-2 md:right-6 md:bottom-36">
             <button
               type="button"
+              onClick={() => setEditMode((v) => !v)}
+              aria-label={editMode ? "Close editor" : "Open editor"}
+              title={editMode ? "Close editor" : "Edit tour"}
+              className={`grid h-12 w-12 place-items-center rounded-full shadow-lg ring-1 transition ${
+                editMode
+                  ? "bg-lime-400 text-black ring-black/10 hover:bg-lime-300"
+                  : "bg-white/15 text-white ring-white/10 backdrop-blur-md hover:bg-white/25"
+              }`}
+            >
+              <EditIcon className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
               onClick={enterVR}
               aria-label="Enter VR mode"
               title="Enter VR"
@@ -339,18 +451,44 @@ export function PanoramaViewer({ property }: { property: Property }) {
             </button>
           </div>
 
+          {editMode && (
+            <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-3">
+              <div className="relative h-10 w-10">
+                <div className="absolute inset-0 rounded-full border-2 border-lime-400 bg-lime-400/15 shadow-[0_0_20px_rgba(163,230,53,0.5)]" />
+                <div className="absolute left-1/2 top-1/2 h-3 w-px -translate-x-1/2 -translate-y-1/2 bg-lime-400" />
+                <div className="absolute left-1/2 top-1/2 h-px w-3 -translate-x-1/2 -translate-y-1/2 bg-lime-400" />
+              </div>
+              <button
+                type="button"
+                onClick={dropAtCrosshair}
+                className="pointer-events-auto rounded-full bg-lime-400 px-4 py-2 text-xs font-bold text-black shadow-lg hover:bg-lime-300 transition"
+              >
+                + Drop hotspot here
+              </button>
+            </div>
+          )}
+
+          {editMode && (
+            <EditorPanel
+              store={store}
+              activeRoomId={room.id}
+              onSelectRoom={selectRoom}
+              onClose={() => setEditMode(false)}
+            />
+          )}
+
           <div
             className={`pointer-events-none absolute inset-x-0 top-24 z-10 px-4 transition-opacity duration-500 md:hidden ${
               showMobileHint ? "opacity-100" : "opacity-0"
             }`}
           >
             <p className="mx-auto w-fit rounded-full bg-black/55 px-3 py-1.5 text-center text-[10px] uppercase tracking-wider text-white/80 backdrop-blur-sm">
-              Drag to look · Pinch to zoom · Tap chevrons to move
+              Drag to look · Pinch to zoom · Tap rings to move
             </p>
           </div>
           <div className="pointer-events-none absolute left-4 bottom-32 z-10 hidden md:block md:left-6 md:bottom-36">
             <p className="rounded-md bg-black/40 px-3 py-2 text-[10px] uppercase tracking-wider text-white/70 backdrop-blur-sm">
-              Drag to look · Scroll to zoom · Click chevrons to move
+              Drag to look · Scroll to zoom · Click rings to move
             </p>
           </div>
         </>
@@ -366,6 +504,33 @@ export function PanoramaViewer({ property }: { property: Property }) {
         </button>
       )}
     </div>
+  );
+}
+
+function SceneReadyMarker({ onReady }: { onReady: () => void }) {
+  // Mounts only after the suspended PanoramaScene resolves, so this is the
+  // earliest reliable signal that the panorama texture is loaded.
+  useEffect(() => {
+    onReady();
+  }, [onReady]);
+  return null;
+}
+
+function EditIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
+    </svg>
   );
 }
 

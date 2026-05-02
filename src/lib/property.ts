@@ -4,7 +4,6 @@ export type Hotspot = {
   yaw: number;
   pitch: number;
   distance?: number;
-  arrowRotation?: number;
 };
 
 export type Room = {
@@ -24,6 +23,28 @@ export type Property = {
   startRoomId: string;
 };
 
+export const AVAILABLE_IMAGES: {
+  url: string;
+  name: string;
+  propertyId: string;
+}[] = [
+  { url: "/panoramas/lythwood/lounge.jpg", name: "Lounge", propertyId: "lythwood-residence" },
+  { url: "/panoramas/lythwood/bedroom.jpg", name: "Bedroom", propertyId: "lythwood-residence" },
+  { url: "/panoramas/lythwood/entrance_hall.jpg", name: "Entrance Hall", propertyId: "lythwood-residence" },
+  { url: "/panoramas/lythwood/studio.jpg", name: "Studio", propertyId: "lythwood-residence" },
+  { url: "/panoramas/lythwood/gallery.jpg", name: "Outdoor / Gallery", propertyId: "lythwood-residence" },
+  { url: "/panoramas/property2/entrance.jpg", name: "Entrance", propertyId: "property-two" },
+  { url: "/panoramas/property2/living_area.jpg", name: "Living Area", propertyId: "property-two" },
+  { url: "/panoramas/property2/bathroom_1.jpg", name: "Bathroom 1", propertyId: "property-two" },
+  { url: "/panoramas/property2/bedroom_1.jpg", name: "Bedroom 1", propertyId: "property-two" },
+  { url: "/panoramas/property2/bathroom_2.jpg", name: "Bathroom 2", propertyId: "property-two" },
+  { url: "/panoramas/property2/bedroom_2.jpg", name: "Bedroom 2", propertyId: "property-two" },
+];
+
+export function imagesForProperty(propertyId: string) {
+  return AVAILABLE_IMAGES.filter((img) => img.propertyId === propertyId);
+}
+
 const lythwoodResidence: Property = {
   id: "lythwood-residence",
   name: "Lythwood Residence",
@@ -35,7 +56,7 @@ const lythwoodResidence: Property = {
     {
       id: "lounge",
       name: "Lounge",
-      panorama: "/panoramas/lythwood_lounge.jpg",
+      panorama: "/panoramas/lythwood/lounge.jpg",
       initialYaw: 0,
       hotspots: [
         {
@@ -44,7 +65,6 @@ const lythwoodResidence: Property = {
           yaw: -1.0140715725990819,
           pitch: -0.3969961590880365,
           distance: 5.962930947190773,
-          arrowRotation: 3.141592653589793,
         },
         {
           to: "studio",
@@ -52,14 +72,13 @@ const lythwoodResidence: Property = {
           yaw: 0.5711373621074277,
           pitch: -0.2922347467570833,
           distance: 8.309839585743577,
-          arrowRotation: 2.5307274153917776,
         },
       ],
     },
     {
       id: "entrance",
       name: "Entrance Hall",
-      panorama: "/panoramas/entrance_hall.jpg",
+      panorama: "/panoramas/lythwood/entrance_hall.jpg",
       hotspots: [
         {
           to: "gallery",
@@ -67,7 +86,6 @@ const lythwoodResidence: Property = {
           yaw: 0.7008870650889057,
           pitch: -0.42740522780731066,
           distance: 5.488664466662418,
-          arrowRotation: 3.0543261909900763,
         },
         {
           to: "lounge",
@@ -75,7 +93,6 @@ const lythwoodResidence: Property = {
           yaw: -2.406448135314341,
           pitch: -0.9868638466737635,
           distance: 4.8,
-          arrowRotation: 3.141592653589793,
         },
         {
           to: "studio",
@@ -83,7 +100,6 @@ const lythwoodResidence: Property = {
           yaw: -0.8626102385298633,
           pitch: -0.4025101163754395,
           distance: 5.8719191852810155,
-          arrowRotation: 3.141592653589793,
         },
         {
           to: "bedroom",
@@ -91,14 +107,13 @@ const lythwoodResidence: Property = {
           yaw: 2.390687244300054,
           pitch: -0.41359815705678304,
           distance: 5.695853438265766,
-          arrowRotation: 3.141592653589793,
         },
       ],
     },
     {
       id: "studio",
       name: "Studio",
-      panorama: "/panoramas/studio_small_03.jpg",
+      panorama: "/panoramas/lythwood/studio.jpg",
       hotspots: [
         {
           to: "entrance",
@@ -106,14 +121,13 @@ const lythwoodResidence: Property = {
           yaw: 0,
           pitch: -0.5235987755982988,
           distance: 2.5,
-          arrowRotation: 2.9670597283903604,
         },
       ],
     },
     {
       id: "gallery",
       name: "Gallery",
-      panorama: "/panoramas/museum_of_history.jpg",
+      panorama: "/panoramas/lythwood/gallery.jpg",
       hotspots: [
         {
           to: "entrance",
@@ -121,14 +135,13 @@ const lythwoodResidence: Property = {
           yaw: 1.9023863824190428,
           pitch: -0.4300095670185122,
           distance: 5.4509862243658445,
-          arrowRotation: 3.141592653589793,
         },
       ],
     },
     {
       id: "bedroom",
       name: "Bedroom",
-      panorama: "/panoramas/lythwood_room.jpg",
+      panorama: "/panoramas/lythwood/bedroom.jpg",
       hotspots: [
         {
           to: "entrance",
@@ -136,7 +149,6 @@ const lythwoodResidence: Property = {
           yaw: 0.39973320767532794,
           pitch: -0.49622294927264055,
           distance: 4.617587411367505,
-          arrowRotation: 3.141592653589793,
         },
         {
           to: "lounge",
@@ -144,7 +156,6 @@ const lythwoodResidence: Property = {
           yaw: -0.1268509425294596,
           pitch: -0.49624425000053357,
           distance: 4.617352498174848,
-          arrowRotation: 2.705260340591211,
         },
       ],
     },
@@ -156,105 +167,118 @@ const propertyTwo: Property = {
   name: "Property Two",
   address: "Sample Address",
   description:
-    "A 5-room property tour. Adjust hotspot positions in src/lib/property.ts as needed.",
-  startRoomId: "room-1",
+    "A 6-room property tour: entrance, living area, two bathrooms, and two bedrooms.",
+  startRoomId: "entrance",
   rooms: [
     {
-      id: "room-1",
-      name: "Room 1",
-      panorama: "/panoramas/property2_room1.jpg",
+      id: "entrance",
+      name: "Entrance",
+      panorama: "/panoramas/property2/entrance.jpg",
       hotspots: [
         {
-          to: "room-2",
-          label: "To Room 2",
-          yaw: 0,
-          pitch: -0.4,
-          distance: 5,
-          arrowRotation: Math.PI,
+          to: "living-area",
+          label: "To Living Area",
+          yaw: -1.5211717027810927,
+          pitch: -0.5210569488759934,
+          distance: 4.3556577420017355,
         },
       ],
     },
     {
-      id: "room-2",
-      name: "Room 2",
-      panorama: "/panoramas/property2_room2.avif",
+      id: "living-area",
+      name: "Living Area",
+      panorama: "/panoramas/property2/living_area.jpg",
       hotspots: [
         {
-          to: "room-1",
-          label: "To Room 1",
-          yaw: Math.PI,
-          pitch: -0.4,
+          to: "bedroom-1",
+          label: "To Bedroom 1",
+          yaw: -2.7205584992463945,
+          pitch: -0.5595895993824531,
           distance: 5,
-          arrowRotation: Math.PI,
         },
         {
-          to: "room-3",
-          label: "To Room 3",
-          yaw: 0,
-          pitch: -0.4,
-          distance: 5,
-          arrowRotation: Math.PI,
+          to: "entrance",
+          label: "To Entrance",
+          yaw: 2.7715210036504243,
+          pitch: -0.6285822865380095,
+          distance: 3.439046938699259,
+        },
+        {
+          to: "bedroom-2",
+          label: "To Bedroom 2",
+          yaw: -1.9209252433142503,
+          pitch: -0.7471247670342103,
+          distance: 2.6990838145535894,
         },
       ],
     },
     {
-      id: "room-3",
-      name: "Room 3",
-      panorama: "/panoramas/property2_room3.jpg",
+      id: "bathroom-1",
+      name: "Bathroom 1",
+      panorama: "/panoramas/property2/bathroom_1.jpg",
       hotspots: [
         {
-          to: "room-2",
-          label: "To Room 2",
-          yaw: Math.PI,
-          pitch: -0.4,
-          distance: 5,
-          arrowRotation: Math.PI,
-        },
-        {
-          to: "room-4",
-          label: "To Room 4",
-          yaw: 0,
-          pitch: -0.4,
-          distance: 5,
-          arrowRotation: Math.PI,
+          to: "bedroom-1",
+          label: "To Bedroom 1",
+          yaw: 1.1511149937095382,
+          pitch: -0.8747513906644315,
+          distance: 2.0888745268637674,
         },
       ],
     },
     {
-      id: "room-4",
-      name: "Room 4",
-      panorama: "/panoramas/property2_room4.jpg",
+      id: "bedroom-1",
+      name: "Bedroom 1",
+      panorama: "/panoramas/property2/bedroom_1.jpg",
       hotspots: [
         {
-          to: "room-3",
-          label: "To Room 3",
-          yaw: Math.PI,
-          pitch: -0.4,
-          distance: 5,
-          arrowRotation: Math.PI,
+          to: "living-area",
+          label: "To Living",
+          yaw: 0.6157653513151794,
+          pitch: -0.11582834214637758,
+          distance: 9,
         },
         {
-          to: "room-5",
-          label: "To Room 5",
-          yaw: 0,
-          pitch: -0.4,
-          distance: 5,
-          arrowRotation: Math.PI,
+          to: "bathroom-1",
+          label: "To Bathroom 1",
+          yaw: 0.16364855741592177,
+          pitch: -0.36391398089406884,
+          distance: 7.7,
         },
       ],
     },
     {
-      id: "room-5",
-      name: "Room 5",
-      panorama: "/panoramas/property2_room5.jpg",
+      id: "bathroom-2",
+      name: "Bathroom 2",
+      panorama: "/panoramas/property2/bathroom_2.jpg",
       hotspots: [
         {
-          to: "room-4",
-          label: "To Room 4",
-          yaw: Math.PI,
-          pitch: -0.4,
-          distance: 5,
-          arrowRotation: Math.PI,
+          to: "bedroom-2",
+          label: "To Bedroom 2",
+          yaw: 0.4828173983723745,
+          pitch: -0.7528717812598054,
+          distance: 2.668160882812399,
+        },
+      ],
+    },
+    {
+      id: "bedroom-2",
+      name: "Bedroom 2",
+      panorama: "/panoramas/property2/bedroom_2.jpg",
+      hotspots: [
+        {
+          to: "living-area",
+          label: "To Living Area",
+          yaw: -1.6645172392472314,
+          pitch: -0.39701314043640257,
+          distance: 5.962646986087029,
+        },
+        {
+          to: "bathroom-2",
+          label: "To Bathroom 2",
+          yaw: -2.453047605771621,
+          pitch: -0.3528858884962945,
+          distance: 7.5,
         },
       ],
     },
