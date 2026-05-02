@@ -1,10 +1,8 @@
 import Link from "next/link";
-import { properties, type Property } from "@/lib/property";
+import { HERO_IMAGE_URL, properties, type Property } from "@/lib/property";
 
 export default function Home() {
-  const heroImage =
-    properties[0].rooms.find((r) => r.id === properties[0].startRoomId)
-      ?.panorama ?? properties[0].rooms[0].panorama;
+  const heroImage = HERO_IMAGE_URL;
 
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
@@ -91,9 +89,10 @@ export default function Home() {
 }
 
 function PropertyCard({ property }: { property: Property }) {
-  const cover =
-    property.rooms.find((r) => r.id === property.startRoomId)?.panorama ??
-    property.rooms[0].panorama;
+  const startRoom =
+    property.rooms.find((r) => r.id === property.startRoomId) ??
+    property.rooms[0];
+  const cover = startRoom.thumb ?? startRoom.panorama;
   return (
     <Link
       href={`/tour/${property.id}`}

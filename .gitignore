@@ -36,6 +36,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local s3 config (bucket policy / cors)
+/.s3-config/
+
+# generated thumbnails (rebuild via scripts/gen-thumbs.mjs)
+/thumbs-out/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
